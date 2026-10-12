@@ -6,7 +6,7 @@ export const colors = {
   masked: '#fbbf24', // amber — partial access / masked
   denied: '#f87171', // red — access denied
   ingest: '#fde68a', // white-gold — new data landing
-  beacon: '#f87171',
+  beacon: '#ffffff', // white corner flashers
   windowLit: '#ffd98a',
   windowDim: '#131a2e',
   skyTop: '#050711',

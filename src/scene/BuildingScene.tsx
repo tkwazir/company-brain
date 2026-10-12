@@ -1,4 +1,4 @@
-import { Suspense, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
@@ -7,12 +7,20 @@ import { Tower } from './Tower'
 import { BeamOverlay, BeamProjector } from './Beam'
 import { useBrainStore } from '../state/store'
 
-const BUILDING_OFFSET_X = -4.5
-const CAMERA_BASE = new THREE.Vector3(7, 11, 21)
-const CAMERA_TARGET = new THREE.Vector3(-3.5, 6.5, 0)
+// Camera sits dead-on with the building (zero X offset from target — no
+// yaw/obliqueness at all) so floor bands read as flat and horizontal, not
+// diagonal/"tilted". The leftward composition shift is done with a lens
+// shift (setViewOffset) below, not by rotating the camera, so it never
+// introduces any tilt.
+const BUILDING_OFFSET_X = -1
+const CAMERA_TARGET = new THREE.Vector3(BUILDING_OFFSET_X, 6.5, 0)
+const CAMERA_BASE = new THREE.Vector3(BUILDING_OFFSET_X, 10, 27)
+const CAMERA_FOV = 36
+// Fraction of the viewport width to push the building toward the left edge.
+const VIEW_SHIFT_X = 0.16
 
 function CameraRig() {
-  const { camera } = useThree()
+  const { camera, size } = useThree()
   const isAnimating = useBrainStore((s) => s.isAnimating)
 
   useFrame((state) => {
@@ -20,13 +28,27 @@ function CameraRig() {
     const drift = isAnimating ? 1 : 0
     const radius = Math.hypot(CAMERA_BASE.x - CAMERA_TARGET.x, CAMERA_BASE.z - CAMERA_TARGET.z)
     const baseAngle = Math.atan2(CAMERA_BASE.z - CAMERA_TARGET.z, CAMERA_BASE.x - CAMERA_TARGET.x)
-    const angle = baseAngle + Math.sin(t * 0.05) * 0.05 * drift
+    const angle = baseAngle + Math.sin(t * 0.05) * 0.015 * drift
     const x = CAMERA_TARGET.x + radius * Math.cos(angle)
     const z = CAMERA_TARGET.z + radius * Math.sin(angle)
-    const y = CAMERA_BASE.y + Math.sin(t * 0.08) * 0.25 * drift
+    const y = CAMERA_BASE.y + Math.sin(t * 0.08) * 0.1 * drift
     camera.position.set(x, y, z)
     camera.lookAt(CAMERA_TARGET)
   })
+
+  useEffect(() => {
+    const persp = camera as THREE.PerspectiveCamera
+    const w = size.width
+    const h = size.height
+    const fullWidth = w * (1 + 2 * VIEW_SHIFT_X)
+    const offsetX = fullWidth - w
+    persp.setViewOffset(fullWidth, h, offsetX, 0, w, h)
+    persp.updateProjectionMatrix()
+    return () => {
+      persp.clearViewOffset()
+      persp.updateProjectionMatrix()
+    }
+  }, [camera, size])
 
   return null
 }
@@ -45,7 +67,7 @@ export function BuildingScene() {
 
   return (
     <div ref={canvasRef} className="absolute inset-0">
-      <Canvas camera={{ position: CAMERA_BASE.toArray(), fov: 42 }} gl={{ antialias: true }}>
+      <Canvas camera={{ position: CAMERA_BASE.toArray(), fov: CAMERA_FOV }} gl={{ antialias: true }}>
         <Suspense fallback={null}>
           <CameraRig />
           <BeamProjector />

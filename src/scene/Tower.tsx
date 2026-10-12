@@ -6,7 +6,7 @@ import type { TowerId } from '../config/theme'
 import { buildingDimensions, colors } from '../config/theme'
 import { floorsByTower } from '../config/building'
 import { Floor } from './Floor'
-import { Beacon } from './Beacon'
+import { CornerBeacons } from './Beacon'
 
 interface FloorLayout {
   floor: FloorData
@@ -33,6 +33,7 @@ export function Tower({ towerId }: { towerId: TowerId }) {
   const floors = useMemo(() => floorsByTower(towerId), [towerId])
   const { layout, totalHeight } = useMemo(() => computeLayout(floors, towerId), [floors, towerId])
   const x = buildingDimensions.towerSpacing[towerId]
+  const topSize = layout[layout.length - 1]?.size ?? buildingDimensions.baseSize[towerId]
 
   return (
     <group position={[x, 0, 0]}>
@@ -40,7 +41,7 @@ export function Tower({ towerId }: { towerId: TowerId }) {
         <Floor key={floor.id} floor={floor} y={y} size={size} />
       ))}
       <WindowField layout={layout} />
-      <Beacon y={totalHeight} phase={BEACON_PHASE[towerId]} color={colors.beacon} />
+      <CornerBeacons y={totalHeight} size={topSize} phase={BEACON_PHASE[towerId]} />
       {towerId === 'center' && (
         <LightSweep totalHeight={totalHeight} width={buildingDimensions.baseSize.center} />
       )}
