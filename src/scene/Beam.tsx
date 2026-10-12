@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useBrainStore } from '../state/store'
+import type { ActiveQuery } from '../state/store'
 import { colors } from '../config/theme'
 import { floorObjects, floorScreenPositions, getFeedAnchorEl } from './beamBridge'
 
@@ -31,6 +32,13 @@ const DECISION_COLOR: Record<string, string> = {
   masked: colors.masked,
 }
 
+// Stable fallback references — a fresh [] / {} literal returned from a
+// Zustand selector on every call makes useSyncExternalStore see a "changed"
+// snapshot every time, which triggers React's "Maximum update depth
+// exceeded" infinite-render-loop crash.
+const EMPTY_FLOOR_IDS: string[] = []
+const EMPTY_GOVERNANCE: NonNullable<ActiveQuery['governance']> = {}
+
 // Lives outside the <Canvas>, absolutely positioned above it. Reads the
 // screen positions written by BeamProjector plus the feed anchor's DOM rect
 // on its own rAF loop and writes straight to SVG attributes — no React
@@ -38,9 +46,9 @@ const DECISION_COLOR: Record<string, string> = {
 export function BeamOverlay() {
   const svgRef = useRef<SVGSVGElement>(null)
   const beamingFloorIds = useBrainStore((s) =>
-    s.activeQuery?.stage === 'beaming' ? s.activeQuery.beamingFloorIds : [],
+    s.activeQuery?.stage === 'beaming' ? s.activeQuery.beamingFloorIds : EMPTY_FLOOR_IDS,
   )
-  const governance = useBrainStore((s) => s.activeQuery?.governance ?? {})
+  const governance = useBrainStore((s) => s.activeQuery?.governance ?? EMPTY_GOVERNANCE)
 
   useEffect(() => {
     let raf: number
