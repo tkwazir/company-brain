@@ -1,0 +1,199 @@
+import type {
+  AccessDecision,
+  AuditEntry,
+  Floor,
+  IngestEvent,
+  QueryRequest,
+  QueryResponse,
+  Role,
+} from './types'
+import type { BrainClient } from './client'
+import { floors } from './mockData'
+import { decideAccess, reasonFor } from './mockPolicy'
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+function floorById(id: string): Floor {
+  const floor = floors.find((f) => f.id === id)
+  if (!floor) throw new Error(`Unknown floor id: ${id}`)
+  return floor
+}
+
+function buildSources(floorIds: string[], role: Role): QueryResponse['sources'] {
+  return floorIds.map((floorId) => {
+    const floor = floorById(floorId)
+    const decision = decideAccess(role, floor)
+    return { floorId, decision, reason: reasonFor(floor, decision) }
+  })
+}
+
+function buildAudit(sources: QueryResponse['sources'], role: Role): AuditEntry[] {
+  const timestamp = new Date().toISOString()
+  return sources.map((s) => ({ timestamp, role, floorId: s.floorId, decision: s.decision }))
+}
+
+interface ScriptedQuestion {
+  match: (lowerQuestion: string) => boolean
+  floorIds: string[]
+  // The floor whose access decision gates whether the sensitive columns in
+  // this answer are shown, masked, or withheld entirely.
+  governingFloorId: string
+  labelColumns: string[]
+  answer: string
+  sql: string
+  columns: string[]
+  rows: (string | number | null)[][]
+}
+
+const SCRIPTED: ScriptedQuestion[] = [
+  {
+    match: (q) => q.includes('revenue') && q.includes('region'),
+    floorIds: ['revenue-monthly', 'sales-orders'],
+    governingFloorId: 'revenue-monthly',
+    labelColumns: ['region'],
+    answer:
+      'Revenue last quarter was led by the West region at $4.2M, with the Northeast close behind at $3.8M.',
+    sql: "SELECT region, SUM(amount) AS revenue\nFROM sales_orders\nJOIN revenue_monthly USING (region)\nWHERE quarter = 'Q3'\nGROUP BY region\nORDER BY revenue DESC;",
+    columns: ['region', 'revenue'],
+    rows: [
+      ['West', 4_200_000],
+      ['Northeast', 3_800_000],
+      ['Midwest', 2_950_000],
+      ['South', 2_410_000],
+    ],
+  },
+  {
+    match: (q) => q.includes('churn'),
+    floorIds: ['customers', 'churn-signals'],
+    governingFloorId: 'churn-signals',
+    labelColumns: ['customer_name', 'churned_at'],
+    answer: 'Fourteen customers churned in September; the highest-LTV loss was Brightline Logistics at $184K.',
+    sql: "SELECT customer_name, ltv, churned_at\nFROM customers\nJOIN churn_signals USING (customer_id)\nWHERE churned_at BETWEEN '2026-09-01' AND '2026-09-30'\nORDER BY ltv DESC\nLIMIT 5;",
+    columns: ['customer_name', 'ltv', 'churned_at'],
+    rows: [
+      ['Brightline Logistics', 184_200, '2026-09-11'],
+      ['Nordway Retail', 96_400, '2026-09-04'],
+      ['Alder & Finch', 71_900, '2026-09-22'],
+      ['Caldera Foods', 52_300, '2026-09-18'],
+      ['Pinehurst Clinics', 38_750, '2026-09-27'],
+    ],
+  },
+  {
+    match: (q) => q.includes('salary'),
+    floorIds: ['hr-employees', 'hr-compensation'],
+    governingFloorId: 'hr-compensation',
+    labelColumns: ['department'],
+    answer: 'Average salary by department ranges from $78K in Support to $146K in Engineering.',
+    sql: 'SELECT department, AVG(salary) AS avg_salary\nFROM hr_compensation\nJOIN hr_employees USING (employee_id)\nGROUP BY department\nORDER BY avg_salary DESC;',
+    columns: ['department', 'avg_salary'],
+    rows: [
+      ['Engineering', 146_000],
+      ['Product', 128_500],
+      ['Sales', 112_000],
+      ['Marketing', 98_200],
+      ['Support', 78_400],
+    ],
+  },
+  {
+    match: (q) => q.includes('margin') && q.includes('product'),
+    floorIds: ['margin-by-product', 'inventory'],
+    governingFloorId: 'margin-by-product',
+    labelColumns: ['product_name'],
+    answer:
+      'Top margin product this year is the Atlas Pro bundle at 61% gross margin, followed by the Nimbus subscription tier at 57%.',
+    sql: 'SELECT product_name, gross_margin_pct\nFROM margin_by_product\nORDER BY gross_margin_pct DESC\nLIMIT 5;',
+    columns: ['product_name', 'gross_margin_pct'],
+    rows: [
+      ['Atlas Pro Bundle', 61],
+      ['Nimbus Subscription', 57],
+      ['Fieldwork Kit', 52],
+      ['Horizon Add-on', 49],
+      ['Baseline Plan', 41],
+    ],
+  },
+]
+
+const KEYWORD_FLOORS: [string[], string[]][] = [
+  [['sale', 'order', 'revenue'], ['sales-orders', 'revenue-monthly']],
+  [['customer', 'churn'], ['customers', 'churn-signals']],
+  [['marketing', 'campaign', 'spend'], ['marketing-spend']],
+  [['support', 'ticket'], ['support-tickets']],
+  [['inventory', 'stock'], ['inventory']],
+  [['hr', 'employee', 'headcount', 'salary', 'compensation', 'payroll'], ['hr-employees', 'hr-compensation']],
+  [['vendor', 'contract'], ['vendor-contracts']],
+  [['product', 'margin'], ['margin-by-product', 'product-catalog']],
+]
+
+function genericFallback(lowerQuestion: string): ScriptedQuestion {
+  const hit = KEYWORD_FLOORS.find(([keywords]) => keywords.some((k) => lowerQuestion.includes(k)))
+  const floorIds = hit?.[1] ?? ['customers', 'sales-orders']
+
+  return {
+    match: () => true,
+    floorIds,
+    governingFloorId: floorIds[floorIds.length - 1],
+    labelColumns: ['metric'],
+    answer:
+      "That's a plausible read based on the datasets that matched your question — wire up the real backend to replace this with a live answer.",
+    sql: `SELECT *\nFROM ${floorIds.join('_and_')}\nLIMIT 10;`,
+    columns: ['metric', 'value'],
+    rows: [['estimate', 'See sources below for the datasets used']],
+  }
+}
+
+function resolveScripted(question: string): ScriptedQuestion {
+  const lower = question.toLowerCase()
+  return SCRIPTED.find((s) => s.match(lower)) ?? genericFallback(lower)
+}
+
+export const mockClient: BrainClient = {
+  async getBuilding() {
+    await delay(250)
+    return floors
+  },
+
+  async query({ question, role }: QueryRequest): Promise<QueryResponse> {
+    const scripted = resolveScripted(question)
+    await delay(900)
+
+    const sources = buildSources(scripted.floorIds, role)
+    const audit = buildAudit(sources, role)
+
+    const governingSource = sources.find((s) => s.floorId === scripted.governingFloorId)
+    const governingDecision: AccessDecision = governingSource?.decision ?? 'denied'
+
+    const columns = scripted.columns.map((name) => ({
+      name,
+      masked: governingDecision === 'masked' && !scripted.labelColumns.includes(name),
+    }))
+
+    let rows: (string | number | null)[][] = []
+    let answer = scripted.answer
+
+    if (governingDecision === 'denied') {
+      const floor = floorById(scripted.governingFloorId)
+      answer = `Access denied: this answer needs ${floor.name} (${floor.domain}), which your current role (${role.replace('_', ' ')}) can't see.`
+      rows = []
+    } else if (governingDecision === 'masked') {
+      rows = scripted.rows.map((row) =>
+        row.map((cell, i) => (columns[i]?.masked ? '••••' : cell)),
+      )
+    } else {
+      rows = scripted.rows
+    }
+
+    return {
+      answer,
+      sql: scripted.sql,
+      columns,
+      rows,
+      sources,
+      audit,
+    }
+  },
+
+  async ingest(_req, onEvent: (event: IngestEvent) => void) {
+    // Fleshed out in the ingest-flow build pass.
+    onEvent({ stage: 'extract', message: 'Ingest flow not yet implemented' })
+  },
+}
