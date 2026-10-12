@@ -16,7 +16,9 @@ export function RoleBadge() {
   return (
     <button
       type="button"
-      className="flex items-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/70 px-3 py-1.5 text-sm text-slate-200 shadow-lg shadow-black/30 backdrop-blur transition hover:border-cyan-400/40"
+      disabled
+      title="Role switching lands in the next build pass"
+      className="focus-ring flex items-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/70 px-3 py-1.5 text-sm text-slate-200 shadow-lg shadow-black/30 backdrop-blur disabled:cursor-default"
     >
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/20 text-xs font-semibold text-cyan-300">
         {info.initials}

@@ -41,7 +41,7 @@ function App() {
               type="button"
               disabled
               title="Ingest flow lands in the next build pass"
-              className="self-start text-sm text-slate-500 opacity-60"
+              className="focus-ring self-start text-sm text-slate-500 opacity-60 disabled:cursor-default"
             >
               + Ingest data
             </button>

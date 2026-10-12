@@ -69,7 +69,8 @@ export function AnswerCard({ response }: AnswerCardProps) {
       <button
         type="button"
         onClick={() => setSqlOpen((v) => !v)}
-        className="mt-3 flex items-center gap-1 text-xs font-medium text-slate-400 transition hover:text-cyan-300"
+        aria-expanded={sqlOpen}
+        className="focus-ring mt-3 flex items-center gap-1 text-xs font-medium text-slate-400 transition hover:text-cyan-300"
       >
         <span className={`transition-transform ${sqlOpen ? 'rotate-90' : ''}`}>▸</span>
         Generated SQL
@@ -105,9 +106,11 @@ export function AnswerCard({ response }: AnswerCardProps) {
                   {row.map((cell, j) => (
                     <td
                       key={j}
-                      className={`px-3 py-1.5 ${response.columns[j]?.masked ? 'font-mono text-amber-300' : 'text-slate-200'}`}
+                      className={`px-3 py-1.5 ${typeof cell === 'number' ? 'tabular-nums' : ''} ${
+                        response.columns[j]?.masked ? 'font-mono text-amber-300' : 'text-slate-200'
+                      }`}
                     >
-                      {cell}
+                      {typeof cell === 'number' ? cell.toLocaleString() : cell}
                     </td>
                   ))}
                 </tr>
@@ -127,7 +130,8 @@ export function AnswerCard({ response }: AnswerCardProps) {
               key={source.floorId}
               type="button"
               onClick={() => handleSourceClick(source.floorId)}
-              className="rounded-full border px-2.5 py-1 text-[11px] transition hover:brightness-125"
+              aria-label={`Highlight ${floor.name} in the building`}
+              className="focus-ring rounded-full border px-2.5 py-1 text-[11px] transition hover:brightness-125"
               style={{ borderColor: `${color}55`, color, backgroundColor: `${color}14` }}
             >
               {floor.tower[0]?.toUpperCase()}

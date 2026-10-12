@@ -82,16 +82,18 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
         onKeyDown={handleKeyDown}
         rows={1}
         disabled={disabled}
+        aria-label="Ask Company Brain a question"
         placeholder={disabled ? 'Company Brain is thinking…' : 'Ask Company Brain…'}
-        className="flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-5 text-slate-100 placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
+        className="focus-ring flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-5 text-slate-100 placeholder:text-slate-500 disabled:opacity-50"
         style={{ overflowY: 'auto' }}
       />
       {micSupported && (
         <button
           type="button"
           onClick={toggleMic}
+          aria-label={listening ? 'Stop voice input' : 'Ask by voice'}
           title={listening ? 'Listening…' : 'Ask by voice'}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition ${
+          className={`focus-ring flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition ${
             listening
               ? 'animate-pulse border-red-400/60 bg-red-500/20 text-red-300'
               : 'border-slate-700/60 bg-slate-800/60 text-slate-300 hover:text-cyan-300'
@@ -104,8 +106,9 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
         type="button"
         onClick={handleSend}
         disabled={disabled || !value.trim()}
+        aria-label="Send question"
         title="Send"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500/90 text-slate-950 transition disabled:cursor-not-allowed disabled:bg-slate-700/60 disabled:text-slate-500"
+        className="focus-ring flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500/90 text-slate-950 transition disabled:cursor-not-allowed disabled:bg-slate-700/60 disabled:text-slate-500"
       >
         <SendIcon />
       </button>

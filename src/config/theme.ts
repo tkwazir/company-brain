@@ -30,11 +30,14 @@ export const buildingDimensions = {
     right: 3,
   },
   setbackFactor: 0.9,
-  // Distance between tower centers along X.
+  // Distance between tower centers along X — set so each tower's base
+  // footprint touches its neighbor's (half-width + half-width + a hairline
+  // gap to avoid z-fighting). They taper apart above the podium as the
+  // setbacks shrink each tower's footprint with height.
   towerSpacing: {
-    left: -6.5,
+    left: -(3.0 / 2 + 4.4 / 2 + 0.03),
     center: 0,
-    right: 6.5,
+    right: 3.0 / 2 + 4.4 / 2 + 0.03,
   },
   windowsPerFloorSide: 5,
   windowRows: 2,

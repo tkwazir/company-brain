@@ -14,7 +14,7 @@ import { useBrainStore } from '../state/store'
 // introduces any tilt.
 const BUILDING_OFFSET_X = -1
 const CAMERA_TARGET = new THREE.Vector3(BUILDING_OFFSET_X, 6.5, 0)
-const CAMERA_BASE = new THREE.Vector3(BUILDING_OFFSET_X, 10, 27)
+const CAMERA_BASE = new THREE.Vector3(BUILDING_OFFSET_X, 10, 28)
 const CAMERA_FOV = 36
 // Fraction of the viewport width to push the building toward the left edge.
 const VIEW_SHIFT_X = 0.16
@@ -22,10 +22,13 @@ const VIEW_SHIFT_X = 0.16
 function CameraRig() {
   const { camera, size } = useThree()
   const isAnimating = useBrainStore((s) => s.isAnimating)
+  const reducedMotion = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    const drift = isAnimating ? 1 : 0
+    const drift = isAnimating && !reducedMotion.current ? 1 : 0
     const radius = Math.hypot(CAMERA_BASE.x - CAMERA_TARGET.x, CAMERA_BASE.z - CAMERA_TARGET.z)
     const baseAngle = Math.atan2(CAMERA_BASE.z - CAMERA_TARGET.z, CAMERA_BASE.x - CAMERA_TARGET.x)
     const angle = baseAngle + Math.sin(t * 0.05) * 0.015 * drift
@@ -56,7 +59,7 @@ function CameraRig() {
 function Podium() {
   return (
     <mesh position={[BUILDING_OFFSET_X, -0.35, 0]}>
-      <boxGeometry args={[17, 0.7, 6]} />
+      <boxGeometry args={[11.2, 0.7, 5.2]} />
       <meshStandardMaterial color="#070b16" roughness={0.6} metalness={0.3} />
     </mesh>
   )

@@ -59,3 +59,21 @@ body {
 .beam-flow {
   animation: beam-flow 0.6s linear infinite;
 }
+
+/* Every interactive element gets a designed focus ring instead of the
+   browser default (or, worse, a silently removed outline). */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.6);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beam-flow {
+    animation: none;
+  }
+}
