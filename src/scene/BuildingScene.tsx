@@ -4,6 +4,7 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { Sky } from './Sky'
 import { Tower } from './Tower'
+import { BeamOverlay, BeamProjector } from './Beam'
 import { useBrainStore } from '../state/store'
 
 const BUILDING_OFFSET_X = -4.5
@@ -47,6 +48,7 @@ export function BuildingScene() {
       <Canvas camera={{ position: CAMERA_BASE.toArray(), fov: 42 }} gl={{ antialias: true }}>
         <Suspense fallback={null}>
           <CameraRig />
+          <BeamProjector />
           <Sky />
           <ambientLight intensity={0.22} />
           <directionalLight position={[12, 20, 8]} intensity={0.35} color="#bfe3ff" />
@@ -61,6 +63,7 @@ export function BuildingScene() {
           </EffectComposer>
         </Suspense>
       </Canvas>
+      <BeamOverlay />
     </div>
   )
 }

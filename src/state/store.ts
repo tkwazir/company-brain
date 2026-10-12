@@ -1,19 +1,19 @@
 import { create } from 'zustand'
 import type { AccessDecision, AuditEntry, Floor, QueryResponse, Role } from '../api/types'
 
-export type QueryStage = 'idle' | 'thinking' | 'routing' | 'governance' | 'beaming' | 'answered' | 'cooldown'
-
-export interface FloorRouting {
-  floorId: string
-  decision?: AccessDecision
-  reason?: string
-}
+export type QueryStage = 'thinking' | 'routing' | 'governance' | 'beaming' | 'answered' | 'cooldown'
 
 export interface ActiveQuery {
   stage: QueryStage
   question: string
-  routing: FloorRouting[]
-  response?: QueryResponse
+  // All floors this query touches, in a fixed order.
+  floorIds: string[]
+  // Floors revealed so far during the 'routing' stage (progressive reveal).
+  routedFloorIds: string[]
+  // Per-floor decisions revealed so far during the 'governance' stage.
+  governance: Record<string, { decision: AccessDecision; reason?: string }>
+  // Floors currently sending a beam to the feed (granted/masked only).
+  beamingFloorIds: string[]
 }
 
 export interface FeedMessage {

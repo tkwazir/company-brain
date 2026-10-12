@@ -20,9 +20,10 @@ function getSpeechRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
 
 interface InputBarProps {
   onSend: (text: string) => void
+  disabled?: boolean
 }
 
-export function InputBar({ onSend }: InputBarProps) {
+export function InputBar({ onSend, disabled }: InputBarProps) {
   const [value, setValue] = useState('')
   const [listening, setListening] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -80,8 +81,9 @@ export function InputBar({ onSend }: InputBarProps) {
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         rows={1}
-        placeholder="Ask Company Brain…"
-        className="flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-5 text-slate-100 placeholder:text-slate-500 focus:outline-none"
+        disabled={disabled}
+        placeholder={disabled ? 'Company Brain is thinking…' : 'Ask Company Brain…'}
+        className="flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-5 text-slate-100 placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
         style={{ overflowY: 'auto' }}
       />
       {micSupported && (
@@ -101,7 +103,7 @@ export function InputBar({ onSend }: InputBarProps) {
       <button
         type="button"
         onClick={handleSend}
-        disabled={!value.trim()}
+        disabled={disabled || !value.trim()}
         title="Send"
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500/90 text-slate-950 transition disabled:cursor-not-allowed disabled:bg-slate-700/60 disabled:text-slate-500"
       >

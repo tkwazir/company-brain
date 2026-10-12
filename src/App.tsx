@@ -6,48 +6,15 @@ import { InputBar } from './ui/InputBar'
 import { SuggestedQuestions } from './ui/SuggestedQuestions'
 import { useBrainStore } from './state/store'
 import { brainClient } from './api/client'
-import type { AccessDecision } from './api/types'
-
-function summarizeGovernance(sources: { decision: AccessDecision }[]): string {
-  const counts: Record<AccessDecision, number> = { granted: 0, masked: 0, denied: 0 }
-  for (const source of sources) counts[source.decision] += 1
-
-  const parts: string[] = []
-  if (counts.granted) parts.push(`${counts.granted} granted`)
-  if (counts.masked) parts.push(`${counts.masked} masked`)
-  if (counts.denied) parts.push(`${counts.denied} denied`)
-  return parts.join(' · ')
-}
+import { runQuery } from './state/queryOrchestrator'
 
 function App() {
-  const addFeedMessage = useBrainStore((s) => s.addFeedMessage)
   const setFloors = useBrainStore((s) => s.setFloors)
-  const role = useBrainStore((s) => s.role)
+  const isBusy = useBrainStore((s) => s.activeQuery !== null)
 
   useEffect(() => {
     brainClient.getBuilding().then(setFloors)
   }, [setFloors])
-
-  // Step 4 replaces this with the full routing -> governance -> beam ->
-  // answer-card sequence. For now it proves the data layer end-to-end.
-  async function handleAsk(text: string) {
-    addFeedMessage({
-      id: crypto.randomUUID(),
-      kind: 'question',
-      text,
-      timestamp: new Date().toISOString(),
-    })
-
-    const response = await brainClient.query({ question: text, role })
-
-    addFeedMessage({
-      id: crypto.randomUUID(),
-      kind: 'answer',
-      text: `${response.answer}\n\n${summarizeGovernance(response.sources)}`,
-      response,
-      timestamp: new Date().toISOString(),
-    })
-  }
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#050711] text-slate-100">
@@ -68,8 +35,8 @@ function App() {
           <div className="flex-1" />
           <div className="pointer-events-auto flex min-h-0 w-full max-w-[460px] flex-col gap-3 p-6 lg:w-[40%]">
             <Feed />
-            <SuggestedQuestions onSelect={handleAsk} />
-            <InputBar onSend={handleAsk} />
+            <SuggestedQuestions onSelect={runQuery} disabled={isBusy} />
+            <InputBar onSend={runQuery} disabled={isBusy} />
             <button
               type="button"
               disabled

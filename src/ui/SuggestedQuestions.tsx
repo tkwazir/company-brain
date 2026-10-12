@@ -11,9 +11,10 @@ export const SUGGESTED_QUESTIONS = [
 
 interface SuggestedQuestionsProps {
   onSelect: (text: string) => void
+  disabled?: boolean
 }
 
-export function SuggestedQuestions({ onSelect }: SuggestedQuestionsProps) {
+export function SuggestedQuestions({ onSelect, disabled }: SuggestedQuestionsProps) {
   const hasAsked = useBrainStore((s) => s.feed.length > 0)
   if (hasAsked) return null
 
@@ -23,8 +24,9 @@ export function SuggestedQuestions({ onSelect }: SuggestedQuestionsProps) {
         <button
           key={question}
           type="button"
+          disabled={disabled}
           onClick={() => onSelect(question)}
-          className="rounded-full border border-slate-700/60 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-300 transition hover:border-cyan-400/40 hover:text-cyan-200"
+          className="rounded-full border border-slate-700/60 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-300 transition hover:border-cyan-400/40 hover:text-cyan-200 disabled:opacity-50"
         >
           {question}
         </button>
