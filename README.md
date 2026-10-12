@@ -8,6 +8,8 @@ This is a **demo-first front end** built for a hackathon. The backend is mocked
 behind a typed API layer so a real backend can be swapped in later with a
 one-line env change.
 
+**Live:** https://company-brain-three-flame.vercel.app
+
 ## Stack
 
 Vite + React + TypeScript, Three.js via `@react-three/fiber` / `@react-three/drei`,
@@ -36,4 +38,11 @@ _(filled in as the presenter-mode features land)_
 
 ## Status
 
-Build in progress — see commit history for current coverage.
+Build in progress. Done so far:
+
+- Static 3D building: three towers, config-driven floors, instanced windows, beacons, bloom, idle camera drift.
+- UI shell: layout, role badge, feed, input bar (text + voice), suggested questions.
+- Typed mock API: governance policy table, 4 scripted demo questions, keyword fallback.
+- Full query animation: thinking → routing → governance → beams → answer card, with collapsible SQL, masked columns, clickable source chips, and a governance summary.
+
+Not yet built: role switching / "Re-run as…" / audit drawer, the ingest flow and modal, and ambient polish + presenter keyboard shortcuts.
