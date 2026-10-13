@@ -1,7 +1,7 @@
 export type Role = 'analyst' | 'vp_finance' | 'hr_director' | 'ceo'
 export type Tower = 'left' | 'center' | 'right'
 export type Sensitivity = 'public' | 'internal' | 'restricted'
-export type AccessDecision = 'granted' | 'masked' | 'denied'
+export type AccessDecision = 'granted' | 'denied'
 
 export interface Floor {
   id: string

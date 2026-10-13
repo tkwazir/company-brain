@@ -16,13 +16,11 @@ interface FloorProps {
 
 const DECISION_COLOR: Record<AccessDecision, string> = {
   granted: colors.granted,
-  masked: colors.masked,
   denied: colors.denied,
 }
 
 const DECISION_LABEL: Record<AccessDecision, string> = {
   granted: '✓ Granted',
-  masked: '◐',
   denied: '✕',
 }
 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { BuildingScene } from './scene/BuildingScene'
 import { RoleBadge } from './ui/RoleBadge'
 import { Feed } from './ui/Feed'
@@ -14,10 +14,24 @@ function App() {
   const isQuerying = useBrainStore((s) => s.activeQuery !== null)
   const isIngesting = useBrainStore((s) => s.ingesting)
   const isBusy = isQuerying || isIngesting
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     brainClient.getBuilding().then(setFloors)
   }, [setFloors])
+
+  function handleIngestClick() {
+    fileInputRef.current?.click()
+  }
+
+  // We only ever read the picked file's name — the File object is never
+  // attached to the ingest request, read, or kept anywhere.
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    runIngest(file.name)
+  }
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#eef0f2] text-slate-900">
@@ -43,11 +57,19 @@ function App() {
             <Feed />
             <SuggestedQuestions onSelect={runQuery} disabled={isBusy} />
             <InputBar onSend={runQuery} disabled={isBusy} />
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              tabIndex={-1}
+              aria-hidden="true"
+              onChange={handleFileSelected}
+            />
             <button
               type="button"
-              onClick={runIngest}
+              onClick={handleIngestClick}
               disabled={isBusy}
-              title="Ingest a sample document into the center tower"
+              title="Choose a document to ingest into the center tower"
               className="focus-ring self-end text-sm text-slate-500 transition hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300"
             >
               + Ingest data

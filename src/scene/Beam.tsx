@@ -29,7 +29,6 @@ export function BeamProjector() {
 
 const DECISION_COLOR: Record<string, string> = {
   granted: colors.granted,
-  masked: colors.masked,
 }
 
 // Stable fallback references — a fresh [] / {} literal returned from a

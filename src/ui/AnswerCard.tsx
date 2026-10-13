@@ -6,7 +6,6 @@ import { useBrainStore } from '../state/store'
 
 const DECISION_COLOR: Record<AccessDecision, string> = {
   granted: colors.granted,
-  masked: colors.masked,
   denied: colors.denied,
 }
 
@@ -29,12 +28,11 @@ function highlightSql(sql: string): ReactNode[] {
 }
 
 function governanceSummary(sources: QueryResponse['sources'], floors: Floor[]): string {
-  const counts: Record<AccessDecision, number> = { granted: 0, masked: 0, denied: 0 }
+  const counts: Record<AccessDecision, number> = { granted: 0, denied: 0 }
   for (const source of sources) counts[source.decision] += 1
 
   const parts: string[] = []
   if (counts.granted) parts.push(`${counts.granted} granted`)
-  if (counts.masked) parts.push(`${counts.masked} masked`)
   if (counts.denied) {
     const deniedFloor = sources.find((s) => s.decision === 'denied')
     const floor = deniedFloor ? floors.find((f) => f.id === deniedFloor.floorId) : undefined

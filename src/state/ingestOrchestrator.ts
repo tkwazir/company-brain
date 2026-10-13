@@ -1,12 +1,12 @@
 import { brainClient } from '../api/client'
 import { useBrainStore } from './store'
 
-const SAMPLE_DATASET_NAME = 'Sample_Contract.pdf'
-
-// Drives the (minimal, no-modal) ingest demo: click "+ Ingest data", a dummy
-// document runs through the pipeline, and a new floor lands on the center
-// tower — growing it live, same pattern as the query orchestrator.
-export async function runIngest() {
+// Drives the ingest demo: the user picks a file via the browser's native
+// file input (App.tsx), we read only its name — the File object itself is
+// never attached to the request or kept anywhere — then run it through the
+// pipeline and land a new floor on the center tower, growing it live, same
+// pattern as the query orchestrator.
+export async function runIngest(fileName: string) {
   const store = useBrainStore.getState()
   if (store.activeQuery || store.ingesting) return // one thing at a time — never break mid-demo
 
@@ -16,11 +16,11 @@ export async function runIngest() {
   store.addFeedMessage({
     id: crypto.randomUUID(),
     kind: 'question',
-    text: `Ingest sample document: ${SAMPLE_DATASET_NAME}`,
+    text: `Ingest document: ${fileName}`,
     timestamp: new Date().toISOString(),
   })
 
-  await brainClient.ingest({ sample: true, datasetName: SAMPLE_DATASET_NAME, role: store.role }, (event) => {
+  await brainClient.ingest({ sample: false, datasetName: fileName, role: store.role }, (event) => {
     const liveStore = useBrainStore.getState()
 
     if (event.stage === 'done') {

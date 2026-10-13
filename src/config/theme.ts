@@ -6,7 +6,6 @@ export const colors = {
   idle: '#9aa1ad', // light steel-grey — floor edge lines / resting definition
   active: '#0ea5e9', // sky-blue pulse — reading data
   granted: '#10b981', // green — access granted
-  masked: '#f59e0b', // amber — partial access / masked
   denied: '#ef4444', // red — access denied
   ingest: '#f59e0b', // amber-gold — new data landing
   beaconBlink: '#ffffff', // white — corner flasher / spire-tip blink

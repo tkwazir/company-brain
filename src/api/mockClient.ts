@@ -55,10 +55,9 @@ function ensureAllTowers(floorIds: string[]): string[] {
 interface ScriptedQuestion {
   match: (lowerQuestion: string) => boolean
   floorIds: string[]
-  // The floor whose access decision gates whether the sensitive columns in
-  // this answer are shown, masked, or withheld entirely.
+  // The floor whose access decision gates whether this answer is shown at
+  // all — granted shows the full table, denied withholds it entirely.
   governingFloorId: string
-  labelColumns: string[]
   answer: string
   sql: string
   columns: string[]
@@ -70,7 +69,6 @@ const SCRIPTED: ScriptedQuestion[] = [
     match: (q) => q.includes('revenue') && q.includes('region'),
     floorIds: ['raw-erp', 'revenue-monthly', 'sales-orders', 'payroll'],
     governingFloorId: 'revenue-monthly',
-    labelColumns: ['region'],
     answer:
       'Revenue last quarter was led by the West region at $4.2M, with the Northeast close behind at $3.8M.',
     sql: "SELECT region, SUM(amount) AS revenue\nFROM sales_orders\nJOIN revenue_monthly USING (region)\nWHERE quarter = 'Q3'\nGROUP BY region\nORDER BY revenue DESC;",
@@ -86,7 +84,6 @@ const SCRIPTED: ScriptedQuestion[] = [
     match: (q) => q.includes('churn'),
     floorIds: ['raw-crm', 'customers', 'churn-signals', 'performance-reviews'],
     governingFloorId: 'churn-signals',
-    labelColumns: ['customer_name', 'churned_at'],
     answer: 'Fourteen customers churned in September; the highest-LTV loss was Brightline Logistics at $184K.',
     sql: "SELECT customer_name, ltv, churned_at\nFROM customers\nJOIN churn_signals USING (customer_id)\nWHERE churned_at BETWEEN '2026-09-01' AND '2026-09-30'\nORDER BY ltv DESC\nLIMIT 5;",
     columns: ['customer_name', 'ltv', 'churned_at'],
@@ -102,7 +99,6 @@ const SCRIPTED: ScriptedQuestion[] = [
     match: (q) => q.includes('salary'),
     floorIds: ['raw-erp', 'finance-budgets', 'hr-employees', 'hr-compensation'],
     governingFloorId: 'hr-compensation',
-    labelColumns: ['department'],
     answer: 'Average salary by department ranges from $78K in Support to $146K in Engineering.',
     sql: 'SELECT department, AVG(salary) AS avg_salary\nFROM hr_compensation\nJOIN hr_employees USING (employee_id)\nGROUP BY department\nORDER BY avg_salary DESC;',
     columns: ['department', 'avg_salary'],
@@ -118,7 +114,6 @@ const SCRIPTED: ScriptedQuestion[] = [
     match: (q) => q.includes('margin') && q.includes('product'),
     floorIds: ['raw-inventory', 'margin-by-product', 'inventory', 'executive-equity'],
     governingFloorId: 'margin-by-product',
-    labelColumns: ['product_name'],
     answer:
       'Top margin product this year is the Atlas Pro bundle at 61% gross margin, followed by the Nimbus subscription tier at 57%.',
     sql: 'SELECT product_name, gross_margin_pct\nFROM margin_by_product\nORDER BY gross_margin_pct DESC\nLIMIT 5;',
@@ -152,7 +147,6 @@ function genericFallback(lowerQuestion: string): ScriptedQuestion {
     match: () => true,
     floorIds,
     governingFloorId: floorIds[floorIds.length - 1],
-    labelColumns: ['metric'],
     answer:
       "That's a plausible read based on the datasets that matched your question — wire up the real backend to replace this with a live answer.",
     sql: `SELECT *\nFROM ${floorIds.join('_and_')}\nLIMIT 10;`,
@@ -183,10 +177,7 @@ export const mockClient: BrainClient = {
     const governingSource = sources.find((s) => s.floorId === scripted.governingFloorId)
     const governingDecision: AccessDecision = governingSource?.decision ?? 'denied'
 
-    const columns = scripted.columns.map((name) => ({
-      name,
-      masked: governingDecision === 'masked' && !scripted.labelColumns.includes(name),
-    }))
+    const columns = scripted.columns.map((name) => ({ name, masked: false }))
 
     let rows: (string | number | null)[][] = []
     let answer = scripted.answer
@@ -195,10 +186,6 @@ export const mockClient: BrainClient = {
       const floor = floorById(scripted.governingFloorId)
       answer = `Access denied: this answer needs ${floor.name} (${floor.domain}), which your current role (${role.replace('_', ' ')}) can't see.`
       rows = []
-    } else if (governingDecision === 'masked') {
-      rows = scripted.rows.map((row) =>
-        row.map((cell, i) => (columns[i]?.masked ? '••••' : cell)),
-      )
     } else {
       rows = scripted.rows
     }
