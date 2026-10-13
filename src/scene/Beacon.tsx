@@ -11,7 +11,7 @@ interface BeaconProps {
 }
 
 // A single small blinking light.
-export function Beacon({ position, phase, color = colors.beacon, radius = 0.05 }: BeaconProps) {
+export function Beacon({ position, phase, color = colors.beaconBlink, radius = 0.05 }: BeaconProps) {
   const matRef = useRef<THREE.MeshStandardMaterial>(null)
 
   useFrame((state) => {
@@ -43,7 +43,7 @@ interface CornerBeaconsProps {
   phase: number
 }
 
-// One small white flashing beacon on each of the four roof corners.
+// One small blinking aviation-style beacon on each of the four roof corners.
 export function CornerBeacons({ y, size, phase }: CornerBeaconsProps) {
   const inset = 0.1
   const half = size / 2 - inset

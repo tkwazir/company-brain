@@ -30,9 +30,9 @@ export function Feed() {
   const showStageIndicator = activeQuery && activeQuery.stage !== 'answered' && activeQuery.stage !== 'cooldown'
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-slate-800/60 bg-slate-950/50 p-4 backdrop-blur-sm">
+    <div className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
       {feed.length === 0 && !showStageIndicator ? (
-        <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-500">
+        <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-400">
           Ask a question below to see Company Brain route it through governed data.
         </div>
       ) : (
@@ -41,11 +41,11 @@ export function Feed() {
             <FeedMessageView key={message.id} message={message} />
           ))}
           {showStageIndicator && (
-            <div className="flex max-w-[90%] items-center gap-2 rounded-2xl rounded-bl-sm border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-sm text-slate-400">
+            <div className="flex max-w-[90%] items-center gap-2 rounded-2xl rounded-bl-sm border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
               <span className="flex gap-1">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400" />
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400 [animation-delay:150ms]" />
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400 [animation-delay:300ms]" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-500" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-500 [animation-delay:150ms]" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-500 [animation-delay:300ms]" />
               </span>
               {STAGE_LABEL[activeQuery!.stage]}
             </div>
@@ -60,7 +60,7 @@ export function Feed() {
 function FeedMessageView({ message }: { message: FeedMessage }) {
   if (message.kind === 'question') {
     return (
-      <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm border border-cyan-400/20 bg-cyan-500/15 px-4 py-2 text-sm text-slate-100">
+      <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-slate-900 px-4 py-2 text-sm text-white">
         {message.text}
       </div>
     )
@@ -69,7 +69,7 @@ function FeedMessageView({ message }: { message: FeedMessage }) {
     return <AnswerCard response={message.response} />
   }
   return (
-    <div className="max-w-[90%] whitespace-pre-line rounded-2xl rounded-bl-sm border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
+    <div className="max-w-[90%] whitespace-pre-line rounded-2xl rounded-bl-sm border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
       {message.text}
     </div>
   )

@@ -17,13 +17,13 @@ function App() {
   }, [setFloors])
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#050711] text-slate-100">
+    <div className="fixed inset-0 overflow-hidden bg-[#f7f4ee] text-slate-900">
       <BuildingScene />
 
       <div className="pointer-events-none relative z-10 flex h-full flex-col">
         <header className="pointer-events-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-slate-200">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-cyan-500/20 text-cyan-300">
+          <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-slate-900">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-900 text-white">
               ◆
             </span>
             Company Brain
@@ -41,7 +41,7 @@ function App() {
               type="button"
               disabled
               title="Ingest flow lands in the next build pass"
-              className="focus-ring self-start text-sm text-slate-500 opacity-60 disabled:cursor-default"
+              className="focus-ring self-start text-sm text-slate-400 disabled:cursor-default"
             >
               + Ingest data
             </button>

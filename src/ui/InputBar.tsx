@@ -74,7 +74,7 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
   }
 
   return (
-    <div className="flex items-end gap-2 rounded-2xl border border-slate-700/60 bg-slate-900/80 p-2.5 shadow-lg shadow-black/30 backdrop-blur">
+    <div className="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-lg shadow-slate-900/5">
       <textarea
         ref={textareaRef}
         value={value}
@@ -84,7 +84,7 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
         disabled={disabled}
         aria-label="Ask Company Brain a question"
         placeholder={disabled ? 'Company Brain is thinking…' : 'Ask Company Brain…'}
-        className="focus-ring flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-5 text-slate-100 placeholder:text-slate-500 disabled:opacity-50"
+        className="focus-ring flex-1 resize-none bg-transparent px-2 py-1.5 text-sm leading-5 text-slate-900 placeholder:text-slate-400 disabled:opacity-50"
         style={{ overflowY: 'auto' }}
       />
       {micSupported && (
@@ -95,8 +95,8 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
           title={listening ? 'Listening…' : 'Ask by voice'}
           className={`focus-ring flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition ${
             listening
-              ? 'animate-pulse border-red-400/60 bg-red-500/20 text-red-300'
-              : 'border-slate-700/60 bg-slate-800/60 text-slate-300 hover:text-cyan-300'
+              ? 'animate-pulse border-red-300 bg-red-50 text-red-500'
+              : 'border-slate-200 bg-slate-50 text-slate-500 hover:text-sky-600'
           }`}
         >
           <MicIcon />
@@ -108,7 +108,7 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
         disabled={disabled || !value.trim()}
         aria-label="Send question"
         title="Send"
-        className="focus-ring flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500/90 text-slate-950 transition disabled:cursor-not-allowed disabled:bg-slate-700/60 disabled:text-slate-500"
+        className="focus-ring flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white transition disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
       >
         <SendIcon />
       </button>

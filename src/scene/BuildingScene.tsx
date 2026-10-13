@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Environment, ContactShadows } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { Sky } from './Sky'
@@ -61,7 +62,7 @@ function Podium() {
   return (
     <mesh position={[BUILDING_OFFSET_X, -0.35, 0]}>
       <boxGeometry args={[11.2, 0.7, 5.2]} />
-      <meshStandardMaterial color="#0c0908" roughness={0.6} metalness={0.3} />
+      <meshStandardMaterial color={colors.bodyBase} roughness={0.3} metalness={0.5} />
     </mesh>
   )
 }
@@ -76,19 +77,28 @@ export function BuildingScene() {
           <CameraRig />
           <BeamProjector />
           <Sky />
-          <ambientLight intensity={0.16} />
-          {/* Warm low-angle "dusk sun" key light — the main source of the warm glow on the glass. */}
-          <directionalLight position={[-14, 9, 14]} intensity={0.45} color={colors.sunKey} />
-          {/* Cool fill from the opposite side keeps shadowed faces from going flat black. */}
-          <directionalLight position={[10, 14, -6]} intensity={0.2} color="#bfe3ff" />
+          {/* Soft neutral studio lighting plus image-based reflections — a
+              clean product-render look rather than a glowing night scene. */}
+          <ambientLight intensity={0.55} />
+          <directionalLight position={[-10, 16, 12]} intensity={0.5} color="#ffffff" />
+          <directionalLight position={[10, 10, -8]} intensity={0.25} color="#dbe4f0" />
+          <Environment preset="city" environmentIntensity={0.45} />
           <Podium />
+          <ContactShadows
+            position={[BUILDING_OFFSET_X, 0.01, 0]}
+            opacity={0.3}
+            scale={16}
+            blur={2.2}
+            far={6}
+            color="#1a2333"
+          />
           <group position={[BUILDING_OFFSET_X, 0, 0]}>
             <Tower towerId="left" />
             <Tower towerId="center" />
             <Tower towerId="right" />
           </group>
           <EffectComposer>
-            <Bloom intensity={0.55} luminanceThreshold={0.35} luminanceSmoothing={0.8} mipmapBlur />
+            <Bloom intensity={0.35} luminanceThreshold={0.55} luminanceSmoothing={0.75} mipmapBlur />
           </EffectComposer>
         </Suspense>
       </Canvas>

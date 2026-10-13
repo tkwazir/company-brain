@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Floor as FloorData } from '../api/types'
 import type { TowerId } from '../config/theme'
-import { buildingDimensions, colors, windowLitColors } from '../config/theme'
+import { buildingDimensions, colors } from '../config/theme'
 import { floorsByTower } from '../config/building'
 import { Floor } from './Floor'
 import { CornerBeacons } from './Beacon'
@@ -58,13 +58,11 @@ interface WindowInstance {
   z: number
   rotY: number
   seed: number
-  litColor: string
 }
 
 function buildInstances(layout: FloorLayout[]): WindowInstance[] {
   const { windowsPerFloorSide, windowRows, floorHeight } = buildingDimensions
   const list: WindowInstance[] = []
-  const pickLitColor = () => windowLitColors[Math.floor(Math.random() * windowLitColors.length)]
   layout.forEach(({ y, size }) => {
     const half = size / 2
     const rowHeight = floorHeight / (windowRows + 1)
@@ -73,52 +71,53 @@ function buildInstances(layout: FloorLayout[]): WindowInstance[] {
       for (let col = 0; col < windowsPerFloorSide; col++) {
         const t = (col + 0.5) / windowsPerFloorSide - 0.5
         const offset = t * size * 0.8
-        list.push({ x: offset, y: wy, z: half + 0.01, rotY: 0, seed: Math.random(), litColor: pickLitColor() })
-        list.push({ x: offset, y: wy, z: -half - 0.01, rotY: Math.PI, seed: Math.random(), litColor: pickLitColor() })
-        list.push({ x: half + 0.01, y: wy, z: offset, rotY: Math.PI / 2, seed: Math.random(), litColor: pickLitColor() })
-        list.push({ x: -half - 0.01, y: wy, z: offset, rotY: -Math.PI / 2, seed: Math.random(), litColor: pickLitColor() })
+        list.push({ x: offset, y: wy, z: half + 0.01, rotY: 0, seed: Math.random() })
+        list.push({ x: offset, y: wy, z: -half - 0.01, rotY: Math.PI, seed: Math.random() })
+        list.push({ x: half + 0.01, y: wy, z: offset, rotY: Math.PI / 2, seed: Math.random() })
+        list.push({ x: -half - 0.01, y: wy, z: offset, rotY: -Math.PI / 2, seed: Math.random() })
       }
     }
   })
   return list
 }
 
-// A single instanced mesh for every window on this tower. Lit/dim state is
-// baked into the instance color buffer; a handful of instances flicker each
-// frame by mutating that same buffer rather than touching React state.
+// A single instanced mesh for every window on this tower: a clean, mostly
+// static cool-navy mullion grid (sleek, not a glowing night facade). A
+// handful of instances get a very subtle sky-blue shimmer — like light
+// catching the glass — for quiet ambient life rather than "lit windows".
 function WindowField({ layout }: { layout: FloorLayout[] }) {
   const meshRef = useRef<THREE.InstancedMesh>(null)
   const instances = useMemo(() => buildInstances(layout), [layout])
+  const baseColor = useMemo(() => new THREE.Color(colors.windowMullion), [])
+  const shimmerColor = useMemo(() => new THREE.Color(colors.active), [])
 
   useEffect(() => {
     const mesh = meshRef.current
     if (!mesh) return
     const dummy = new THREE.Object3D()
-    const color = new THREE.Color()
     instances.forEach((inst, i) => {
       dummy.position.set(inst.x, inst.y, inst.z)
       dummy.rotation.set(0, inst.rotY, 0)
       dummy.scale.set(0.16, 0.14, 0.02)
       dummy.updateMatrix()
       mesh.setMatrixAt(i, dummy.matrix)
-      color.set(inst.seed > 0.45 ? inst.litColor : colors.windowDim)
-      mesh.setColorAt(i, color)
+      mesh.setColorAt(i, baseColor)
     })
     mesh.instanceMatrix.needsUpdate = true
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
-  }, [instances])
+  }, [instances, baseColor])
 
   useFrame((state) => {
     const mesh = meshRef.current
     if (!mesh || !mesh.instanceColor || instances.length === 0) return
     const t = state.clock.elapsedTime
     const color = new THREE.Color()
-    const flickerCount = 6
-    for (let k = 0; k < flickerCount; k++) {
-      const idx = Math.floor((Math.sin(t * 0.3 + k * 13.7) * 0.5 + 0.5) * instances.length) % instances.length
+    const shimmerCount = 5
+    for (let k = 0; k < shimmerCount; k++) {
+      const idx = Math.floor((Math.sin(t * 0.25 + k * 13.7) * 0.5 + 0.5) * instances.length) % instances.length
       const inst = instances[idx]
-      const on = Math.sin(t * 2 + inst.seed * 60) > 0
-      color.set(on ? inst.litColor : colors.windowDim)
+      const glow = Math.max(0, Math.sin(t * 1.2 + inst.seed * 40)) * 0.35
+      color.copy(baseColor).lerp(shimmerColor, glow)
       mesh.setColorAt(idx, color)
     }
     mesh.instanceColor.needsUpdate = true
@@ -129,14 +128,14 @@ function WindowField({ layout }: { layout: FloorLayout[] }) {
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, instances.length]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial toneMapped={false} />
+      <meshStandardMaterial roughness={0.2} metalness={0.5} toneMapped={false} />
     </instancedMesh>
   )
 }
 
 // Twin antenna spires on the hero (center) tower roof, echoing the classic
-// bundled-tube skyscraper silhouette — tall, thin, bright white, unequal
-// heights.
+// bundled-tube skyscraper silhouette — tall, thin brushed-steel masts with a
+// blinking aviation-light tip, unequal heights.
 function AntennaSpires({ y }: { y: number }) {
   const spires: { x: number; height: number; z: number }[] = [
     { x: -0.18, height: 2.1, z: 0 },
@@ -149,14 +148,7 @@ function AntennaSpires({ y }: { y: number }) {
         <group key={i} position={[s.x, y, s.z]}>
           <mesh position={[0, s.height / 2, 0]}>
             <cylinderGeometry args={[0.022, 0.035, s.height, 8]} />
-            <meshStandardMaterial
-              color="#e7ecf2"
-              emissive={colors.beacon}
-              emissiveIntensity={0.6}
-              roughness={0.3}
-              metalness={0.6}
-              toneMapped={false}
-            />
+            <meshStandardMaterial color="#8793a8" roughness={0.25} metalness={0.85} toneMapped={false} />
           </mesh>
           <SpireTip y={s.height} />
         </group>
@@ -179,7 +171,13 @@ function SpireTip({ y }: { y: number }) {
   return (
     <mesh position={[0, y + 0.03, 0]}>
       <sphereGeometry args={[0.035, 8, 8]} />
-      <meshStandardMaterial ref={matRef} color="#ffffff" emissive="#ff6b5e" emissiveIntensity={0.3} toneMapped={false} />
+      <meshStandardMaterial
+        ref={matRef}
+        color={colors.beaconBlink}
+        emissive={colors.beaconBlink}
+        emissiveIntensity={0.3}
+        toneMapped={false}
+      />
     </mesh>
   )
 }

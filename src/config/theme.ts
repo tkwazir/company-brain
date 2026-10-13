@@ -1,24 +1,20 @@
-// Color language used consistently across the 3D scene and UI. Idle glass
-// glows warm (amber/gold, like sun-struck glass at dusk) so the building
-// reads as lively against the dark sky; cyan is reserved for the active
-// "reading data" pulse so it stands out as a deliberate state change.
+// Color language used consistently across the 3D scene and UI. The building
+// is sleek navy glass (reflective, not glowing) against a light premium-SaaS
+// page; cyan is reserved for the active "reading data" pulse so it reads as
+// a deliberate state change against the otherwise quiet navy.
 export const colors = {
-  idle: '#e8a254', // warm amber-gold — resting glass glow
-  active: '#22d3ee', // bright cyan pulse — reading data
-  granted: '#34d399', // green — access granted
-  masked: '#fbbf24', // amber — partial access / masked
-  denied: '#f87171', // red — access denied
-  ingest: '#fde68a', // white-gold — new data landing
-  beacon: '#ffffff', // white corner flashers + antenna spires
-  windowDim: '#191310',
-  skyTop: '#050711',
-  skyBottom: '#121a3a',
-  sunKey: '#ffb374', // warm low-angle key light, like a dusk sun
+  idle: '#3d5478', // mid steel-navy — floor edge lines / resting definition
+  active: '#0ea5e9', // sky-blue pulse — reading data (deepened for contrast on light bg)
+  granted: '#10b981', // green — access granted
+  masked: '#f59e0b', // amber — partial access / masked
+  denied: '#ef4444', // red — access denied
+  ingest: '#f59e0b', // amber-gold — new data landing
+  beacon: '#334155', // steel spire/beacon body (non-emissive)
+  beaconBlink: '#f43f5e', // rose — aviation-style blink, visible against a light sky
+  windowMullion: '#24334a', // subtle cool window-grid tone, slightly lighter than body
+  bodyBase: '#0d1420', // near-black navy glass body
+  pageBg: '#f7f4ee', // soft warm off-white page background
 } as const
-
-// A few warm window tones so lit windows don't read as one flat color —
-// gold, amber, and a soft warm white, like a real lit facade at dusk.
-export const windowLitColors = ['#ffcf8a', '#ffb870', '#fff0d2'] as const
 
 export type TowerId = 'left' | 'center' | 'right'
 

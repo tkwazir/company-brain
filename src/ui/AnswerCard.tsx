@@ -63,35 +63,35 @@ export function AnswerCard({ response }: AnswerCardProps) {
   }
 
   return (
-    <div className="max-w-[92%] rounded-2xl rounded-bl-sm border border-slate-700/60 bg-slate-900/80 p-4 text-sm text-slate-100 shadow-lg shadow-black/30">
-      <p className="text-slate-100">{response.answer}</p>
+    <div className="max-w-[92%] rounded-2xl rounded-bl-sm border border-slate-200 bg-white p-4 text-sm text-slate-900 shadow-sm">
+      <p className="text-slate-900">{response.answer}</p>
 
       <button
         type="button"
         onClick={() => setSqlOpen((v) => !v)}
         aria-expanded={sqlOpen}
-        className="focus-ring mt-3 flex items-center gap-1 text-xs font-medium text-slate-400 transition hover:text-cyan-300"
+        className="focus-ring mt-3 flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-sky-600"
       >
         <span className={`transition-transform ${sqlOpen ? 'rotate-90' : ''}`}>▸</span>
         Generated SQL
       </button>
       {sqlOpen && (
-        <pre className="mt-2 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950/80 p-3 font-mono text-[11px] leading-5 text-slate-300">
+        <pre className="mt-2 overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-[11px] leading-5 text-slate-300">
           {highlightSql(response.sql)}
         </pre>
       )}
 
       {response.rows.length > 0 && (
-        <div className="mt-3 overflow-x-auto rounded-lg border border-slate-800">
+        <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400">
+              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
                 {response.columns.map((col) => (
                   <th key={col.name} className="px-3 py-1.5 font-medium">
                     <span className="inline-flex items-center gap-1.5">
                       {col.name}
                       {col.masked && (
-                        <span className="rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">
+                        <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
                           masked
                         </span>
                       )}
@@ -102,12 +102,12 @@ export function AnswerCard({ response }: AnswerCardProps) {
             </thead>
             <tbody>
               {response.rows.map((row, i) => (
-                <tr key={i} className="border-b border-slate-800/60 last:border-0">
+                <tr key={i} className="border-b border-slate-100 last:border-0">
                   {row.map((cell, j) => (
                     <td
                       key={j}
                       className={`px-3 py-1.5 ${typeof cell === 'number' ? 'tabular-nums' : ''} ${
-                        response.columns[j]?.masked ? 'font-mono text-amber-300' : 'text-slate-200'
+                        response.columns[j]?.masked ? 'font-mono text-amber-600' : 'text-slate-700'
                       }`}
                     >
                       {typeof cell === 'number' ? cell.toLocaleString() : cell}
