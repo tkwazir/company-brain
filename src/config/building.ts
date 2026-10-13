@@ -1,8 +1,10 @@
 import type { Floor, Tower } from '../api/types'
 
-// Single source of truth for the building layout. The 3D scene reads this
-// directly; the mock API (src/api/mockData.ts) re-exports the same list so
-// the two never drift apart.
+// Seed data for the building layout. The mock API (src/api/mockData.ts)
+// re-exports this list, and the store (src/state/store.ts) initializes from
+// it — the store is the live source of truth at runtime (the 3D scene reads
+// store.floors, not this file directly) so ingested floors can be appended
+// without this static seed ever drifting from what the API would return.
 
 export const towerMeta: Record<Tower, { label: string; subtitle: string }> = {
   left: { label: 'Landing', subtitle: 'Raw source dumps' },
@@ -42,7 +44,3 @@ export const floors: Floor[] = [
   { id: 'performance-reviews', tower: 'right', level: 5, name: 'Performance_Reviews', domain: 'HR', sensitivity: 'restricted', rowCount: 2_430 },
   { id: 'executive-equity', tower: 'right', level: 6, name: 'Executive_Equity_Grants', domain: 'Finance', sensitivity: 'restricted', rowCount: 210 },
 ]
-
-export function floorsByTower(tower: Tower): Floor[] {
-  return floors.filter((f) => f.tower === tower).sort((a, b) => a.level - b.level)
-}

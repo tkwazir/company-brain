@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { AccessDecision, AuditEntry, Floor, QueryResponse, Role } from '../api/types'
+import { floors as seedFloors } from '../config/building'
 
 export type QueryStage = 'thinking' | 'routing' | 'governance' | 'beaming' | 'answered' | 'cooldown'
 
@@ -27,9 +28,16 @@ export interface FeedMessage {
 interface BrainState {
   floors: Floor[]
   setFloors: (floors: Floor[]) => void
+  addFloor: (floor: Floor) => void
 
   role: Role
   setRole: (role: Role) => void
+
+  ingesting: boolean
+  setIngesting: (value: boolean) => void
+
+  newlyIngestedFloorId: string | null
+  setNewlyIngestedFloorId: (id: string | null) => void
 
   feed: FeedMessage[]
   addFeedMessage: (message: FeedMessage) => void
@@ -52,11 +60,20 @@ interface BrainState {
 }
 
 export const useBrainStore = create<BrainState>((set) => ({
-  floors: [],
+  // Seeded with the same list the mock API starts from, so the building
+  // renders immediately instead of waiting on the first getBuilding() call.
+  floors: seedFloors,
   setFloors: (floors) => set({ floors }),
+  addFloor: (floor) => set((s) => ({ floors: [...s.floors, floor] })),
 
   role: 'analyst',
   setRole: (role) => set({ role }),
+
+  ingesting: false,
+  setIngesting: (ingesting) => set({ ingesting }),
+
+  newlyIngestedFloorId: null,
+  setNewlyIngestedFloorId: (newlyIngestedFloorId) => set({ newlyIngestedFloorId }),
 
   feed: [],
   addFeedMessage: (message) => set((s) => ({ feed: [...s.feed, message] })),

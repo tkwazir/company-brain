@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import type { Floor as FloorData } from '../api/types'
 import type { TowerId } from '../config/theme'
 import { buildingDimensions, colors } from '../config/theme'
-import { floorsByTower } from '../config/building'
+import { useBrainStore } from '../state/store'
 import { Floor } from './Floor'
 import { CornerBeacons } from './Beacon'
 
@@ -30,7 +30,13 @@ function computeLayout(floors: FloorData[], towerId: TowerId) {
 const BEACON_PHASE: Record<TowerId, number> = { left: 0, center: 0.8, right: 1.6 }
 
 export function Tower({ towerId }: { towerId: TowerId }) {
-  const floors = useMemo(() => floorsByTower(towerId), [towerId])
+  // Reactive to the store (not a static import) so an ingested floor — added
+  // to store.floors at runtime — grows the tower immediately.
+  const allFloors = useBrainStore((s) => s.floors)
+  const floors = useMemo(
+    () => allFloors.filter((f) => f.tower === towerId).sort((a, b) => a.level - b.level),
+    [allFloors, towerId],
+  )
   const { layout, totalHeight } = useMemo(() => computeLayout(floors, towerId), [floors, towerId])
   const x = buildingDimensions.towerSpacing[towerId]
   const topSize = layout[layout.length - 1]?.size ?? buildingDimensions.baseSize[towerId]

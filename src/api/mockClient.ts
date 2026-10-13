@@ -6,12 +6,17 @@ import type {
   QueryRequest,
   QueryResponse,
   Role,
+  Tower,
 } from './types'
 import type { BrainClient } from './client'
 import { floors } from './mockData'
 import { decideAccess, reasonFor } from './mockPolicy'
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Mock "server-side" counter for where the next ingested floor lands on the
+// center tower — starts right above the seeded center floors.
+let nextIngestLevel = Math.max(...floors.filter((f) => f.tower === 'center').map((f) => f.level)) + 1
 
 function floorById(id: string): Floor {
   const floor = floors.find((f) => f.id === id)
@@ -32,6 +37,21 @@ function buildAudit(sources: QueryResponse['sources'], role: Role): AuditEntry[]
   return sources.map((s) => ({ timestamp, role, floorId: s.floorId, decision: s.decision }))
 }
 
+// Default per-tower "also check" floor used to round a query out so every
+// prompt visibly touches all three towers, not just the one most relevant
+// to the question — the demo beat is seeing beams reach the whole building.
+const DEFAULT_TOWER_FLOOR: Record<Tower, string> = {
+  left: 'raw-erp',
+  center: 'customers',
+  right: 'hr-employees',
+}
+
+function ensureAllTowers(floorIds: string[]): string[] {
+  const present = new Set(floorIds.map((id) => floorById(id).tower))
+  const missing = (['left', 'center', 'right'] as Tower[]).filter((t) => !present.has(t))
+  return [...floorIds, ...missing.map((t) => DEFAULT_TOWER_FLOOR[t])]
+}
+
 interface ScriptedQuestion {
   match: (lowerQuestion: string) => boolean
   floorIds: string[]
@@ -48,7 +68,7 @@ interface ScriptedQuestion {
 const SCRIPTED: ScriptedQuestion[] = [
   {
     match: (q) => q.includes('revenue') && q.includes('region'),
-    floorIds: ['revenue-monthly', 'sales-orders'],
+    floorIds: ['raw-erp', 'revenue-monthly', 'sales-orders', 'payroll'],
     governingFloorId: 'revenue-monthly',
     labelColumns: ['region'],
     answer:
@@ -64,7 +84,7 @@ const SCRIPTED: ScriptedQuestion[] = [
   },
   {
     match: (q) => q.includes('churn'),
-    floorIds: ['customers', 'churn-signals'],
+    floorIds: ['raw-crm', 'customers', 'churn-signals', 'performance-reviews'],
     governingFloorId: 'churn-signals',
     labelColumns: ['customer_name', 'churned_at'],
     answer: 'Fourteen customers churned in September; the highest-LTV loss was Brightline Logistics at $184K.',
@@ -80,7 +100,7 @@ const SCRIPTED: ScriptedQuestion[] = [
   },
   {
     match: (q) => q.includes('salary'),
-    floorIds: ['hr-employees', 'hr-compensation'],
+    floorIds: ['raw-erp', 'finance-budgets', 'hr-employees', 'hr-compensation'],
     governingFloorId: 'hr-compensation',
     labelColumns: ['department'],
     answer: 'Average salary by department ranges from $78K in Support to $146K in Engineering.',
@@ -96,7 +116,7 @@ const SCRIPTED: ScriptedQuestion[] = [
   },
   {
     match: (q) => q.includes('margin') && q.includes('product'),
-    floorIds: ['margin-by-product', 'inventory'],
+    floorIds: ['raw-inventory', 'margin-by-product', 'inventory', 'executive-equity'],
     governingFloorId: 'margin-by-product',
     labelColumns: ['product_name'],
     answer:
@@ -156,7 +176,8 @@ export const mockClient: BrainClient = {
     const scripted = resolveScripted(question)
     await delay(900)
 
-    const sources = buildSources(scripted.floorIds, role)
+    const floorIds = ensureAllTowers(scripted.floorIds)
+    const sources = buildSources(floorIds, role)
     const audit = buildAudit(sources, role)
 
     const governingSource = sources.find((s) => s.floorId === scripted.governingFloorId)
@@ -192,8 +213,40 @@ export const mockClient: BrainClient = {
     }
   },
 
-  async ingest(_req, onEvent: (event: IngestEvent) => void) {
-    // Fleshed out in the ingest-flow build pass.
-    onEvent({ stage: 'extract', message: 'Ingest flow not yet implemented' })
+  async ingest(req, onEvent: (event: IngestEvent) => void) {
+    const datasetName = req.datasetName || 'Sample_Document'
+
+    await delay(450)
+    onEvent({ stage: 'extract', message: `Extracted 1,240 rows from ${datasetName}`, stats: { rows: 1240 } })
+
+    await delay(550)
+    onEvent({ stage: 'validate', message: 'Validated: 18 nulls found', stats: { nulls: 18 } })
+
+    await delay(550)
+    onEvent({
+      stage: 'clean',
+      message: 'Cleaned: 6 duplicates removed, 18 nulls imputed',
+      stats: { duplicates: 6, imputed: 18 },
+    })
+
+    await delay(550)
+    onEvent({ stage: 'transform', message: 'Transformed: 3 columns standardized', stats: { columns: 3 } })
+
+    await delay(450)
+    const level = nextIngestLevel
+    nextIngestLevel += 1
+    const floor: Floor = {
+      id: `ingest-${level}`,
+      tower: 'center',
+      level,
+      name: datasetName,
+      domain: 'Ops',
+      sensitivity: 'internal',
+      rowCount: 1_240,
+    }
+    onEvent({ stage: 'load', message: `Loaded to Center · Floor ${level + 1}` })
+
+    await delay(350)
+    onEvent({ stage: 'done', floor })
   },
 }

@@ -57,6 +57,7 @@ export function Floor({ floor, y, size }: FloorProps) {
   const hoveredFloorId = useBrainStore((s) => s.hoveredFloorId)
   const setHoveredFloorId = useBrainStore((s) => s.setHoveredFloorId)
   const highlightedFloorId = useBrainStore((s) => s.highlightedFloorId)
+  const newlyIngestedFloorId = useBrainStore((s) => s.newlyIngestedFloorId)
   const activeQuery = useBrainStore((s) => s.activeQuery)
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export function Floor({ floor, y, size }: FloorProps) {
 
   const isHovered = hoveredFloorId === floor.id
   const isHighlighted = highlightedFloorId === floor.id
+  const isNewlyIngested = newlyIngestedFloorId === floor.id
   const status = getFloorQueryStatus(floor.id, activeQuery)
 
   useFrame((state, delta) => {
@@ -85,6 +87,9 @@ export function Floor({ floor, y, size }: FloorProps) {
     } else if (status.isRouting) {
       targetColor = colors.active
       targetIntensity = 1.0 + Math.sin(state.clock.elapsedTime * 6) * 0.3
+    } else if (isNewlyIngested) {
+      targetColor = colors.ingest
+      targetIntensity = 1.1 + Math.sin(state.clock.elapsedTime * 5) * 0.4
     } else if (isHovered || isHighlighted) {
       targetColor = colors.active
       targetIntensity = 1.1
@@ -99,7 +104,9 @@ export function Floor({ floor, y, size }: FloorProps) {
     ? DECISION_COLOR[status.decision]
     : status.isRouting || isHovered || isHighlighted
       ? colors.active
-      : colors.idle
+      : isNewlyIngested
+        ? colors.ingest
+        : colors.idle
 
   return (
     <group ref={groupRef} position={[0, y, 0]}>

@@ -7,10 +7,13 @@ import { SuggestedQuestions } from './ui/SuggestedQuestions'
 import { useBrainStore } from './state/store'
 import { brainClient } from './api/client'
 import { runQuery } from './state/queryOrchestrator'
+import { runIngest } from './state/ingestOrchestrator'
 
 function App() {
   const setFloors = useBrainStore((s) => s.setFloors)
-  const isBusy = useBrainStore((s) => s.activeQuery !== null)
+  const isQuerying = useBrainStore((s) => s.activeQuery !== null)
+  const isIngesting = useBrainStore((s) => s.ingesting)
+  const isBusy = isQuerying || isIngesting
 
   useEffect(() => {
     brainClient.getBuilding().then(setFloors)
@@ -21,14 +24,17 @@ function App() {
       <BuildingScene />
 
       <div className="pointer-events-none relative z-10 flex h-full flex-col">
-        <header className="pointer-events-auto flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-slate-900">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-900 text-white">
+        <header className="pointer-events-auto grid grid-cols-3 items-center px-6 py-4">
+          <div />
+          <div className="flex items-center justify-center gap-2 text-xl font-bold tracking-tight text-slate-900">
+            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-base text-white">
               ◆
             </span>
             Company Brain
           </div>
-          <RoleBadge />
+          <div className="flex justify-end">
+            <RoleBadge disabled={isBusy} />
+          </div>
         </header>
 
         <div className="flex min-h-0 flex-1">
@@ -39,9 +45,10 @@ function App() {
             <InputBar onSend={runQuery} disabled={isBusy} />
             <button
               type="button"
-              disabled
-              title="Ingest flow lands in the next build pass"
-              className="focus-ring self-end text-sm text-slate-400 disabled:cursor-default"
+              onClick={runIngest}
+              disabled={isBusy}
+              title="Ingest a sample document into the center tower"
+              className="focus-ring self-end text-sm text-slate-500 transition hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300"
             >
               + Ingest data
             </button>

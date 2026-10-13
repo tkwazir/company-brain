@@ -35,6 +35,14 @@ const POLICY: Record<Role, RolePolicy> = {
       Finance: 'masked',
     },
   },
+  // The CEO sits above the per-domain policy entirely — full access to
+  // every floor, restricted vault included, no overrides needed.
+  ceo: {
+    public: 'granted',
+    internal: 'granted',
+    restricted: 'granted',
+    domainOverrides: {},
+  },
 }
 
 // One hand-tuned exception for the signature "salary by department" demo

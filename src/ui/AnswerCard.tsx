@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import type { AccessDecision, QueryResponse } from '../api/types'
-import { floors } from '../config/building'
+import type { AccessDecision, Floor, QueryResponse } from '../api/types'
 import { colors } from '../config/theme'
 import { useBrainStore } from '../state/store'
 
@@ -29,7 +28,7 @@ function highlightSql(sql: string): ReactNode[] {
   )
 }
 
-function governanceSummary(sources: QueryResponse['sources']): string {
+function governanceSummary(sources: QueryResponse['sources'], floors: Floor[]): string {
   const counts: Record<AccessDecision, number> = { granted: 0, masked: 0, denied: 0 }
   for (const source of sources) counts[source.decision] += 1
 
@@ -51,6 +50,7 @@ interface AnswerCardProps {
 
 export function AnswerCard({ response }: AnswerCardProps) {
   const [sqlOpen, setSqlOpen] = useState(false)
+  const floors = useBrainStore((s) => s.floors)
   const setHighlightedFloorId = useBrainStore((s) => s.setHighlightedFloorId)
 
   function handleSourceClick(floorId: string) {
@@ -141,7 +141,7 @@ export function AnswerCard({ response }: AnswerCardProps) {
         })}
       </div>
 
-      <p className="mt-2 text-[11px] text-slate-500">{governanceSummary(response.sources)}</p>
+      <p className="mt-2 text-[11px] text-slate-500">{governanceSummary(response.sources, floors)}</p>
     </div>
   )
 }
