@@ -15,8 +15,11 @@ import { colors } from '../config/theme'
 // shift (setViewOffset) below, not by rotating the camera, so it never
 // introduces any tilt.
 const BUILDING_OFFSET_X = -1
-const CAMERA_TARGET = new THREE.Vector3(BUILDING_OFFSET_X, 6.5, 0)
-const CAMERA_BASE = new THREE.Vector3(BUILDING_OFFSET_X, 10, 28)
+// Target/distance leave headroom above the current roofline (~2-3 floors'
+// worth) instead of fitting the current height exactly, since the ingest
+// flow adds floors on top of the center tower and shouldn't clip them.
+const CAMERA_TARGET = new THREE.Vector3(BUILDING_OFFSET_X, 8, 0)
+const CAMERA_BASE = new THREE.Vector3(BUILDING_OFFSET_X, 12, 33)
 const CAMERA_FOV = 36
 // Fraction of the viewport width to push the building toward the left edge.
 const VIEW_SHIFT_X = 0.16
@@ -82,7 +85,7 @@ export function BuildingScene() {
           <ambientLight intensity={0.55} />
           <directionalLight position={[-10, 16, 12]} intensity={0.5} color="#ffffff" />
           <directionalLight position={[10, 10, -8]} intensity={0.25} color="#dbe4f0" />
-          <Environment preset="city" environmentIntensity={0.45} />
+          <Environment preset="studio" environmentIntensity={0.4} />
           <Podium />
           <ContactShadows
             position={[BUILDING_OFFSET_X, 0.01, 0]}
@@ -90,7 +93,7 @@ export function BuildingScene() {
             scale={16}
             blur={2.2}
             far={6}
-            color="#1a2333"
+            color="#2a2d33"
           />
           <group position={[BUILDING_OFFSET_X, 0, 0]}>
             <Tower towerId="left" />

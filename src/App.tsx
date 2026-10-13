@@ -17,7 +17,7 @@ function App() {
   }, [setFloors])
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#f7f4ee] text-slate-900">
+    <div className="fixed inset-0 overflow-hidden bg-[#eef0f2] text-slate-900">
       <BuildingScene />
 
       <div className="pointer-events-none relative z-10 flex h-full flex-col">
@@ -41,7 +41,7 @@ function App() {
               type="button"
               disabled
               title="Ingest flow lands in the next build pass"
-              className="focus-ring self-start text-sm text-slate-400 disabled:cursor-default"
+              className="focus-ring self-end text-sm text-slate-400 disabled:cursor-default"
             >
               + Ingest data
             </button>
