@@ -77,7 +77,7 @@ export function Floor({ floor, y, size }: FloorProps) {
     if (!mat) return
 
     let targetColor: string = colors.idle
-    let targetIntensity = 0.3 + Math.sin(state.clock.elapsedTime * 0.6 + ambientPhase) * 0.08
+    let targetIntensity = 0.05 + Math.sin(state.clock.elapsedTime * 0.6 + ambientPhase) * 0.02
 
     if (status.decision) {
       targetColor = DECISION_COLOR[status.decision]
@@ -116,11 +116,11 @@ export function Floor({ floor, y, size }: FloorProps) {
         <boxGeometry args={[size, buildingDimensions.floorHeight, size]} />
         <meshStandardMaterial
           ref={matRef}
-          color="#0b1322"
+          color="#15110e"
           emissive={colors.idle}
-          emissiveIntensity={0.3}
-          roughness={0.3}
-          metalness={0.65}
+          emissiveIntensity={0.05}
+          roughness={0.28}
+          metalness={0.6}
           transparent
           opacity={0.93}
           toneMapped={false}

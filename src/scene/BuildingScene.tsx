@@ -6,6 +6,7 @@ import { Sky } from './Sky'
 import { Tower } from './Tower'
 import { BeamOverlay, BeamProjector } from './Beam'
 import { useBrainStore } from '../state/store'
+import { colors } from '../config/theme'
 
 // Camera sits dead-on with the building (zero X offset from target — no
 // yaw/obliqueness at all) so floor bands read as flat and horizontal, not
@@ -60,7 +61,7 @@ function Podium() {
   return (
     <mesh position={[BUILDING_OFFSET_X, -0.35, 0]}>
       <boxGeometry args={[11.2, 0.7, 5.2]} />
-      <meshStandardMaterial color="#070b16" roughness={0.6} metalness={0.3} />
+      <meshStandardMaterial color="#0c0908" roughness={0.6} metalness={0.3} />
     </mesh>
   )
 }
@@ -75,8 +76,11 @@ export function BuildingScene() {
           <CameraRig />
           <BeamProjector />
           <Sky />
-          <ambientLight intensity={0.22} />
-          <directionalLight position={[12, 20, 8]} intensity={0.35} color="#bfe3ff" />
+          <ambientLight intensity={0.16} />
+          {/* Warm low-angle "dusk sun" key light — the main source of the warm glow on the glass. */}
+          <directionalLight position={[-14, 9, 14]} intensity={0.45} color={colors.sunKey} />
+          {/* Cool fill from the opposite side keeps shadowed faces from going flat black. */}
+          <directionalLight position={[10, 14, -6]} intensity={0.2} color="#bfe3ff" />
           <Podium />
           <group position={[BUILDING_OFFSET_X, 0, 0]}>
             <Tower towerId="left" />
@@ -84,7 +88,7 @@ export function BuildingScene() {
             <Tower towerId="right" />
           </group>
           <EffectComposer>
-            <Bloom intensity={0.65} luminanceThreshold={0.18} luminanceSmoothing={0.85} mipmapBlur />
+            <Bloom intensity={0.55} luminanceThreshold={0.35} luminanceSmoothing={0.8} mipmapBlur />
           </EffectComposer>
         </Suspense>
       </Canvas>
